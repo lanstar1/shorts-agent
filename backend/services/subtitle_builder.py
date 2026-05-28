@@ -100,7 +100,7 @@ def _esc(s):
 
 
 def build_fcpxml(segments, project_name="shorts-agent", total_sec=25,
-                 font="AppleSDGothicNeoB00", base_size=120, headline_size=160):
+                 font="AppleSDGothicNeo-Bold", base_size=120, headline_size=160):
     """
     세그먼트 → FCPXML 1.10 (9:16 1080x1920).
     gap(전체) 위에 자막 title을 connected clip(lane 1=캡션, lane 2=헤드라인)으로 배치.
@@ -150,7 +150,7 @@ def build_fcpxml(segments, project_name="shorts-agent", total_sec=25,
 <fcpxml version="1.10">
   <resources>
     <format id="r1" name="FFVideoFormat1080x1920p30" frameDuration="1/30s" width="1080" height="1920" colorSpace="1-1-1 (Rec. 709)"/>
-    <effect id="r2" name="Basic Title" uid=".../Titles.localized/Build In:Out.localized/Basic Title.localized/Basic Title.moti"/>
+    <effect id="r2" name="Basic Title" uid=".../Titles.localized/Bumper:Opener.localized/Basic Title.localized/Basic Title.moti"/>
   </resources>
   <library>
     <event name="shorts-agent">
