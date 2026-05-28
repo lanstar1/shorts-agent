@@ -177,7 +177,7 @@ function renderAngles(angles) {
         });
         if (sr.error) { statusEl.textContent = "실패: " + sr.error; e.target.disabled = false; return; }
         statusEl.textContent = `완료: ${sr.script.scenes.length}개 장면`;
-        renderScript(resultEl, sr.script);
+        renderScript(resultEl, sr.script, aid);
       } catch (err) {
         statusEl.textContent = "실패: " + err.message;
         e.target.disabled = false;
@@ -191,7 +191,7 @@ const BROLL_COLORS = {
   "밈": "#d4537e", "그래픽": "#ba7517", "인물": "#993c1d",
 };
 
-function renderScript(el, script) {
+function renderScript(el, script, angleId) {
   let html = `<div class="script-box">
     <div class="script-head">📝 ${escapeHtml(script.title || "")} · ${script.total_duration_sec || 25}초 · ${script.scenes.length}장면</div>`;
   script.scenes.forEach((s) => {
@@ -213,6 +213,11 @@ function renderScript(el, script) {
   if (script.production_notes) {
     html += `<div class="script-notes">📌 제작노트: ${escapeHtml(script.production_notes)}</div>`;
   }
+  html += `<div class="dl-row">
+    <a class="dl-btn" href="/api/exports/subtitles/${angleId}.srt" download>📄 SRT 다운로드</a>
+    <a class="dl-btn" href="/api/exports/subtitles/${angleId}.fcpxml" download>🎬 FCPXML 다운로드</a>
+    <span class="dl-note">FCPXML은 Final Cut Pro에 임포트 · 음성 STT 연동 시 타이밍 자동정렬</span>
+  </div>`;
   html += `</div>`;
   el.innerHTML = html;
 }

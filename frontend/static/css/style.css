@@ -83,3 +83,8 @@ a.link:hover { text-decoration: underline; }
   padding: 1px 6px; border-radius: 4px; }
 .script-notes { font-size: 12px; color: #666; background: #f0f4ff; border-radius: 8px;
   padding: 10px; margin-top: 8px; }
+.dl-row { display: flex; align-items: center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+.dl-btn { display: inline-block; background: #111; color: #fff; text-decoration: none;
+  padding: 9px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; }
+.dl-btn:hover { background: #333; }
+.dl-note { font-size: 11px; color: #999; }
