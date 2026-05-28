@@ -82,13 +82,15 @@ def _coupang_auth(method, path):
             f"signed-date={dt}, signature={sig}")
 
 
-def _coupang_search(keyword, fetch=15, top=5):
+def _coupang_search(keyword, fetch=10, top=5):
     """
     쿠팡 검색 후 관련도 재정렬 + 중복제거.
     fetch개 가져와서 키워드 관련도순으로 정렬, 상위 top개 반환.
+    주의: 쿠팡 검색 API의 limit 상한은 10. 11 이상이면 rCode=400 반환.
     """
     if not config.COUPANG_ACCESS_KEY:
         return []
+    fetch = min(fetch, 10)  # API 상한 강제
     q = urllib.parse.quote(keyword)
     path = (f"/v2/providers/affiliate_open_api/apis/openapi/v1/products/search"
             f"?keyword={q}&limit={fetch}")
