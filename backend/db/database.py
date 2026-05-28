@@ -206,11 +206,13 @@ def get_ranked_topic(topic_id):
         cur = conn.cursor()
         cur.execute(f"SELECT * FROM ranked_topics WHERE id = {ph}", [topic_id])
         row = cur.fetchone()
+        # description은 cursor를 닫기 전에 읽어야 함 (psycopg2는 close 후 접근 시 에러)
+        cols = [d[0] for d in cur.description] if cur.description else []
         cur.close()
         if not row:
             return None
-        cols = [d[0] for d in cur.description] if cur.description else []
-        return dict(zip(cols, row)) if cols else dict(row)
+        # SQLite(Row)/PostgreSQL(tuple) 모두 zip으로 dict 변환
+        return dict(zip(cols, row))
 
 
 def insert_story_angle(row: dict):

@@ -22,37 +22,41 @@ def generate(req: GenerateReq):
     """
     ranked_topic(자동/수동)을 받아 앵글 3개 생성 → story_angles 저장.
     """
-    topic = database.get_ranked_topic(req.topic_id)
-    if not topic:
-        return {"error": f"topic_id {req.topic_id}를 찾을 수 없습니다."}
+    try:
+        topic = database.get_ranked_topic(req.topic_id)
+        if not topic:
+            return {"error": f"topic_id {req.topic_id}를 찾을 수 없습니다."}
 
-    keyword = topic.get("keyword") or topic.get("title")
-    research_data = database.load_json(topic.get("research_data"))
+        keyword = topic.get("keyword") or topic.get("title")
+        research_data = database.load_json(topic.get("research_data"))
 
-    result = generate_angles(keyword, research_data)
-    if "error" in result:
-        return result
+        result = generate_angles(keyword, research_data)
+        if "error" in result:
+            return result
 
-    angles = result.get("angles", [])
-    date_str = datetime.now(KST).strftime("%Y-%m-%d")
-    saved = []
-    for a in angles:
-        angle_id = database.insert_story_angle({
-            "ranked_topic_id": req.topic_id,
-            "generated_date": date_str,
-            "angle_type": a.get("angle_type"),
-            "title": a.get("title"),
-            "hook": a.get("hook"),
-            "data_points": a.get("data_points"),
-            "closing_question": a.get("closing_question"),
-            "curation_score": 0,
-        })
-        a["id"] = angle_id
-        saved.append(a)
+        angles = result.get("angles", [])
+        date_str = datetime.now(KST).strftime("%Y-%m-%d")
+        saved = []
+        for a in angles:
+            angle_id = database.insert_story_angle({
+                "ranked_topic_id": req.topic_id,
+                "generated_date": date_str,
+                "angle_type": a.get("angle_type"),
+                "title": a.get("title"),
+                "hook": a.get("hook"),
+                "data_points": a.get("data_points"),
+                "closing_question": a.get("closing_question"),
+                "curation_score": 0,
+            })
+            a["id"] = angle_id
+            saved.append(a)
 
-    # topic 상태 업데이트
-    _update_topic_status(req.topic_id, "angle_generated")
-    return {"topic_id": req.topic_id, "keyword": keyword, "angles": saved}
+        _update_topic_status(req.topic_id, "angle_generated")
+        return {"topic_id": req.topic_id, "keyword": keyword, "angles": saved}
+    except Exception as e:
+        import traceback
+        return {"error": f"앵글 생성 중 오류: {type(e).__name__}: {e}",
+                "trace": traceback.format_exc()[-500:]}
 
 
 @router.get("/by-topic/{topic_id}")
