@@ -12,6 +12,7 @@ FCPXML: Final Cut Pro 1.10, 9:16 세로(1080x1920) 쇼츠 포맷.
 """
 import re
 import html
+import unicodedata
 
 FPS = 30  # FCPXML frame base
 
@@ -116,6 +117,11 @@ def build_fcpxml_template(segments, project_name="shorts-agent", total_sec=25,
     """
     total_dur = _fcp_dur(total_sec)
     titles_xml = []
+
+    # macOS 파일시스템은 NFD(자모분리) 정규화 사용 → uid/name도 NFD로 맞춰야
+    # FCP가 .moti 파일을 정확히 찾는다. (NFC 완성형이면 '항목을 읽을 수 없음' 에러)
+    template_uid = unicodedata.normalize("NFD", template_uid)
+    template_name = unicodedata.normalize("NFD", template_name)
 
     for seg in segments:
         off = _fcp_dur(seg["start"])
