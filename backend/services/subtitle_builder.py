@@ -100,10 +100,12 @@ def _esc(s):
 
 
 def build_fcpxml(segments, project_name="shorts-agent", total_sec=25,
-                 font="AppleSDGothicNeo-Bold", base_size=120, headline_size=160):
+                 font="AppleSDGothicNeo-Bold", base_size=200, headline_size=260):
     """
-    세그먼트 → FCPXML 1.10 (9:16 1080x1920).
-    gap(전체) 위에 자막 title을 connected clip(lane 1=캡션, lane 2=헤드라인)으로 배치.
+    세그먼트 → FCPXML 1.11 (9:16 1080x1920), FCP 11.x 호환.
+    text-style-def를 title 내부에 두되 textStyleID로 연결.
+    title 안에 <text>+<text-style ref>, 같은 title 안에 <text-style-def id> 동봉.
+    위치는 Transform의 position 파라미터로 (Basic Title 표준 키).
     """
     total_dur = _fcp_dur(total_sec)
     titles_xml = []
@@ -116,16 +118,14 @@ def build_fcpxml(segments, project_name="shorts-agent", total_sec=25,
         # 캡션 (lane 1, 하단)
         if seg["text"]:
             ts_main = f"ts{ts_id}"; ts_id += 1
-            # 강조 키워드가 있으면 노랑, 없으면 흰색
-            has_emph = bool(seg["emphasis"])
-            color = COLOR_MAP.get(seg["emphasis_color"], "1 1 1 1") if has_emph else "1 1 1 1"
-            titles_xml.append(f"""        <title ref="r2" lane="1" offset="{off}" duration="{dur}" name="cap-{seg.get('scene')}">
-          <param name="Position" key="9999/999166631/999166633/1/100/101" value="0 -480"/>
+            titles_xml.append(f"""        <title ref="r2" lane="1" offset="{off}" duration="{dur}" name="cap-{seg.get('scene')}" start="0s">
+          <param name="Position" key="9999/10199/10201/1/100/101" value="0 -550"/>
+          <param name="Alignment" key="9999/10199/10201/2/354/1002961760/401" value="1 (Center)"/>
           <text>
             <text-style ref="{ts_main}">{_esc(seg['text'])}</text-style>
           </text>
           <text-style-def id="{ts_main}">
-            <text-style font="{font}" fontSize="{base_size}" fontColor="1 1 1 1" bold="1" strokeColor="0 0 0 1" strokeWidth="8" alignment="center"/>
+            <text-style font="{font}" fontSize="{base_size}" fontFace="Bold" fontColor="1 1 1 1" bold="1" strokeColor="0 0 0 1" strokeWidth="-12" alignment="center"/>
           </text-style-def>
         </title>""")
 
@@ -133,13 +133,15 @@ def build_fcpxml(segments, project_name="shorts-agent", total_sec=25,
         if seg["headline"]:
             ts_hl = f"ts{ts_id}"; ts_id += 1
             hl_color = COLOR_MAP.get("yellow")
-            titles_xml.append(f"""        <title ref="r2" lane="2" offset="{off}" duration="{dur}" name="hl-{seg.get('scene')}">
-          <param name="Position" key="9999/999166631/999166633/1/100/101" value="0 600"/>
+            hl_text = seg["headline"].replace("\\n", "\n")
+            titles_xml.append(f"""        <title ref="r2" lane="2" offset="{off}" duration="{dur}" name="hl-{seg.get('scene')}" start="0s">
+          <param name="Position" key="9999/10199/10201/1/100/101" value="0 650"/>
+          <param name="Alignment" key="9999/10199/10201/2/354/1002961760/401" value="1 (Center)"/>
           <text>
-            <text-style ref="{ts_hl}">{_esc(seg['headline'])}</text-style>
+            <text-style ref="{ts_hl}">{_esc(hl_text)}</text-style>
           </text>
           <text-style-def id="{ts_hl}">
-            <text-style font="{font}" fontSize="{headline_size}" fontColor="{hl_color}" bold="1" strokeColor="0 0 0 1" strokeWidth="10" alignment="center"/>
+            <text-style font="{font}" fontSize="{headline_size}" fontFace="Bold" fontColor="{hl_color}" bold="1" strokeColor="0 0 0 1" strokeWidth="-14" alignment="center"/>
           </text-style-def>
         </title>""")
 
@@ -147,7 +149,7 @@ def build_fcpxml(segments, project_name="shorts-agent", total_sec=25,
 
     return f"""<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE fcpxml>
-<fcpxml version="1.10">
+<fcpxml version="1.11">
   <resources>
     <format id="r1" name="FFVideoFormat1080x1920p30" frameDuration="1/30s" width="1080" height="1920" colorSpace="1-1-1 (Rec. 709)"/>
     <effect id="r2" name="Basic Title" uid=".../Titles.localized/Bumper:Opener.localized/Basic Title.localized/Basic Title.moti"/>

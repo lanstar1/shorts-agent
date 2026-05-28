@@ -222,7 +222,11 @@ function renderScript(el, script, angleId) {
   html += `<div class="dl-row">
     <a class="dl-btn" href="/api/exports/subtitles/${angleId}.srt" download>📄 SRT 다운로드</a>
     <a class="dl-btn" href="/api/exports/subtitles/${angleId}.fcpxml" download>🎬 FCPXML 다운로드</a>
-    <span class="dl-note">음성 정렬 안 하면 예상 타임코드로 생성 (FCP에서 미세조정)</span>
+  </div>
+  <div class="dl-help">
+    <b>📄 SRT</b>: FCP에서 <b>파일 → 가져오기 → 자막</b> (타이밍·텍스트 100% 적용, 가장 안정적)<br>
+    <b>🎬 FCPXML</b>: 파일 → 가져오기 → FCPXML (헤드라인+캡션 2단 자동배치, 위치/폰트는 FCP에서 조정 가능)<br>
+    음성 정렬 안 하면 예상 타임코드로 생성됩니다.
   </div>`;
   html += `</div>`;
   el.innerHTML = html;
