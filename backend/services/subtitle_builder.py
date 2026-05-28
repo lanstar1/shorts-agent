@@ -99,6 +99,81 @@ def _esc(s):
     return html.escape(s or "", quote=True)
 
 
+# ===== 사용자 유료 템플릿: MP 네모 메모 심플 =====
+# FCPXML export에서 추출한 정확한 uid (12종 중 01번)
+# 게시 텍스트 슬롯: 내용_01(메인), 내용_02(보조), 내용_03(포인트강조)
+MP_TEMPLATE_UID = "~/Titles.localized/MP네모메모심플/MP네모메모심플_FC/MP네모메모심플_01/MP네모메모심플_01.moti"
+MP_TEMPLATE_NAME = "MP네모메모심플_01"
+
+
+def build_fcpxml_template(segments, project_name="shorts-agent", total_sec=25,
+                          template_uid=MP_TEMPLATE_UID, template_name=MP_TEMPLATE_NAME):
+    """
+    사용자 유료 템플릿(MP네모메모심플) 기반 FCPXML.
+    각 장면마다 템플릿 1개를 gap 위 lane 1에 배치.
+    텍스트 슬롯: 내용_01=캡션(메인), 내용_03=강조키워드(있으면)
+    스타일/윤곽선/애니메이션은 템플릿이 자체 보유 → text만 주입.
+    """
+    total_dur = _fcp_dur(total_sec)
+    titles_xml = []
+
+    for seg in segments:
+        off = _fcp_dur(seg["start"])
+        dur = _fcp_dur(max(seg["end"] - seg["start"], 0.5))
+        if not seg["text"]:
+            continue
+
+        # 내용_01 = 메인 캡션, 내용_03 = 강조 키워드(첫번째), 내용_02 = 비움
+        line1 = seg["text"]
+        line3 = seg["emphasis"][0] if seg.get("emphasis") else ""
+
+        titles_xml.append(f"""        <title ref="r2" lane="1" offset="{off}" duration="{dur}" name="{_esc(template_name)}-{seg.get('scene')}" start="3600s">
+          <text>
+            <text-style ref="ts{seg.get('scene')}_1">{_esc(line1)}</text-style>
+          </text>
+          <text>
+            <text-style ref="ts{seg.get('scene')}_2"></text-style>
+          </text>
+          <text>
+            <text-style ref="ts{seg.get('scene')}_3">{_esc(line3)}</text-style>
+          </text>
+          <text-style-def id="ts{seg.get('scene')}_1">
+            <text-style font="AppleSDGothicNeo-Bold" fontSize="100" fontColor="1 1 1 1"/>
+          </text-style-def>
+          <text-style-def id="ts{seg.get('scene')}_2">
+            <text-style font="AppleSDGothicNeo-Bold" fontSize="110" fontColor="1 1 1 1" alignment="center"/>
+          </text-style-def>
+          <text-style-def id="ts{seg.get('scene')}_3">
+            <text-style font="AppleSDGothicNeo-Bold" fontSize="100" fontColor="1 0.84 0 1" alignment="right"/>
+          </text-style-def>
+        </title>""")
+
+    titles_block = "\n".join(titles_xml)
+
+    return f"""<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE fcpxml>
+<fcpxml version="1.11">
+  <resources>
+    <format id="r1" name="FFVideoFormat1080x1920p30" frameDuration="1/30s" width="1080" height="1920" colorSpace="1-1-1 (Rec. 709)"/>
+    <effect id="r2" name="{_esc(template_name)}" uid="{_esc(template_uid)}"/>
+  </resources>
+  <library>
+    <event name="shorts-agent">
+      <project name="{_esc(project_name)}">
+        <sequence format="r1" duration="{total_dur}" tcStart="0s" tcFormat="NDF" audioLayout="stereo" audioRate="48k">
+          <spine>
+            <gap name="Gap" offset="0s" duration="{total_dur}" start="3600s">
+{titles_block}
+            </gap>
+          </spine>
+        </sequence>
+      </project>
+    </event>
+  </library>
+</fcpxml>
+"""
+
+
 def build_fcpxml(segments, project_name="shorts-agent", total_sec=25,
                  font="AppleSDGothicNeo-Bold", base_size=200, headline_size=260):
     """

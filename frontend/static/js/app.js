@@ -224,8 +224,9 @@ function renderScript(el, script, angleId) {
     <a class="dl-btn" href="/api/exports/subtitles/${angleId}.fcpxml" download>🎬 FCPXML 다운로드</a>
   </div>
   <div class="dl-help">
-    <b>📄 SRT</b>: FCP에서 <b>파일 → 가져오기 → 자막</b> (타이밍·텍스트 100% 적용, 가장 안정적)<br>
-    <b>🎬 FCPXML</b>: 파일 → 가져오기 → FCPXML (헤드라인+캡션 2단 자동배치, 위치/폰트는 FCP에서 조정 가능)<br>
+    <b>🎬 FCPXML</b>: 내 자막 템플릿(MP네모메모심플) 적용 — FCP에 템플릿이 설치돼 있어야 함.<br>
+    &nbsp;&nbsp;FCP에서 <b>파일 → 가져오기 → Final Cut Pro XML</b> → 장면마다 자막 자동 배치<br>
+    <b>📄 SRT</b>: 템플릿 없이도 100% 동작. <b>파일 → 가져오기 → 자막</b> (타이밍·텍스트만)<br>
     음성 정렬 안 하면 예상 타임코드로 생성됩니다.
   </div>`;
   html += `</div>`;

@@ -7,7 +7,9 @@ from fastapi.responses import Response
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from db import database
-from services.subtitle_builder import script_to_segments, build_srt, build_fcpxml
+from services.subtitle_builder import (
+    script_to_segments, build_srt, build_fcpxml, build_fcpxml_template,
+)
 
 router = APIRouter(prefix="/api/exports", tags=["exports"])
 
@@ -34,11 +36,17 @@ def download_subtitles(angle_id: int, fmt: str):
         media = "application/x-subrip; charset=utf-8"
         filename = f"shorts_{angle_id}.srt"
     elif fmt == "fcpxml":
-        content = build_fcpxml(segments, project_name=title, total_sec=total)
+        # 사용자 유료 템플릿(MP네모메모심플) 기반 - 스타일 자동
+        content = build_fcpxml_template(segments, project_name=title, total_sec=total)
         media = "application/xml; charset=utf-8"
         filename = f"shorts_{angle_id}.fcpxml"
+    elif fmt == "fcpxml-basic":
+        # FCP 기본 Basic Title 기반 (템플릿 미설치 시 폴백)
+        content = build_fcpxml(segments, project_name=title, total_sec=total)
+        media = "application/xml; charset=utf-8"
+        filename = f"shorts_{angle_id}_basic.fcpxml"
     else:
-        return Response("지원 형식: srt, fcpxml", status_code=400, media_type="text/plain")
+        return Response("지원 형식: srt, fcpxml, fcpxml-basic", status_code=400, media_type="text/plain")
 
     return Response(
         content.encode("utf-8"),
