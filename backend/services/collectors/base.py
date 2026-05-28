@@ -107,3 +107,25 @@ def match_keyword_en(text: str):
                     return m
     # 그다음 일반 매칭
     return match_keyword(text)
+
+
+def to_english(keyword: str):
+    """
+    한글 키워드를 영문 검색어로 변환 (HN/레딧 등 영어 소스용).
+    EN_ALIASES에서 매칭되는 영문 별칭 반환, 없으면 원본.
+    예: "갤럭시 S26 울트라" → "galaxy s26"
+    """
+    if not keyword:
+        return keyword
+    m = match_keyword(keyword)
+    if m and m[0] in EN_ALIASES:
+        # 가장 구체적인(긴) 별칭 우선
+        aliases = sorted(EN_ALIASES[m[0]], key=len, reverse=True)
+        base = aliases[0]
+        # "울트라/ultra", "pro" 등 수식어가 원문에 있으면 영문에도 덧붙임
+        low = keyword.lower()
+        if ("울트라" in keyword or "ultra" in low) and "ultra" not in base:
+            base += " ultra"
+        return base
+    # 이미 영문이면 그대로
+    return keyword

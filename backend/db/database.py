@@ -81,16 +81,18 @@ def init_db():
         )
         """)
 
-        # 2. 점수화 후 랭킹된 주제 (2주차)
+        # 2. 점수화 후 랭킹된 주제 (자동) + 수동 키워드 입력 (수동) 공통
         cur.execute(f"""
         CREATE TABLE IF NOT EXISTS ranked_topics (
             id {serial},
             ranked_date DATE NOT NULL,
+            entry_mode TEXT DEFAULT 'auto',  -- 'auto'(자동소싱) / 'manual'(키워드입력)
             axis TEXT,
             keyword TEXT,
             title TEXT,
             total_score REAL,
             score_breakdown {json_type},
+            research_data {json_type},       -- 수동모드: on-demand 조사 결과
             coupang_monetizable INTEGER DEFAULT 0,
             candidate_ids {json_type},
             status TEXT DEFAULT 'pending',  -- pending/angle_generated/used/rejected
@@ -161,6 +163,54 @@ def count_candidates_by_date(date_str):
         rows = cur.fetchall()
         cur.close()
         return {r[0]: r[1] for r in rows}
+
+
+def insert_ranked_topic(row: dict):
+    """ranked_topics에 1건 삽입하고 id 반환 (자동/수동 공통)"""
+    ph = _ph()
+    cols = ["ranked_date", "entry_mode", "axis", "keyword", "title",
+            "total_score", "score_breakdown", "research_data",
+            "coupang_monetizable", "candidate_ids", "status"]
+    vals = [
+        row.get("ranked_date"),
+        row.get("entry_mode", "auto"),
+        row.get("axis"),
+        row.get("keyword"),
+        row.get("title"),
+        row.get("total_score", 0),
+        dump_json(row.get("score_breakdown")) if row.get("score_breakdown") is not None else None,
+        dump_json(row.get("research_data")) if row.get("research_data") is not None else None,
+        1 if row.get("coupang_monetizable") else 0,
+        dump_json(row.get("candidate_ids")) if row.get("candidate_ids") is not None else None,
+        row.get("status", "pending"),
+    ]
+    placeholders = ", ".join([ph] * len(cols))
+    returning = " RETURNING id" if IS_PG else ""
+    with get_conn() as conn:
+        cur = conn.cursor()
+        cur.execute(
+            f"INSERT INTO ranked_topics ({', '.join(cols)}) VALUES ({placeholders}){returning}",
+            vals,
+        )
+        if IS_PG:
+            new_id = cur.fetchone()[0]
+        else:
+            new_id = cur.lastrowid
+        cur.close()
+        return new_id
+
+
+def get_ranked_topic(topic_id):
+    ph = _ph()
+    with get_conn() as conn:
+        cur = conn.cursor()
+        cur.execute(f"SELECT * FROM ranked_topics WHERE id = {ph}", [topic_id])
+        row = cur.fetchone()
+        cur.close()
+        if not row:
+            return None
+        cols = [d[0] for d in cur.description] if cur.description else []
+        return dict(zip(cols, row)) if cols else dict(row)
 
 
 if __name__ == "__main__":

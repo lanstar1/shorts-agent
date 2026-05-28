@@ -61,6 +61,52 @@ function escapeHtml(s) {
   return s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 }
 
+$("btnResearch").onclick = async () => {
+  const kw = $("kwInput").value.trim();
+  if (!kw) { alert("키워드를 입력하세요"); return; }
+  $("btnResearch").disabled = true;
+  $("researchResult").innerHTML = `<span class="src">'${escapeHtml(kw)}' 조사 중… (5개 소스 검색)</span>`;
+  try {
+    const r = await api("/api/topics/manual-research", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ keyword: kw }),
+    });
+    renderResearch(r);
+  } catch (e) {
+    $("researchResult").innerHTML = `<span class="src">조사 실패: ${e.message}</span>`;
+  }
+  $("btnResearch").disabled = false;
+};
+
+$("kwInput").addEventListener("keydown", (e) => { if (e.key === "Enter") $("btnResearch").click(); });
+
+function renderResearch(r) {
+  const res = r.research;
+  const srcLabels = { coupang: "쿠팡", naver_news: "네이버뉴스", naver_blog: "네이버블로그", hackernews: "해커뉴스", reddit: "레딧" };
+  let html = `<div class="rsummary">`;
+  for (const [k, n] of Object.entries(res.summary)) {
+    html += `<span class="pill ${n > 0 ? "has" : ""}">${srcLabels[k] || k}: ${n}</span>`;
+  }
+  if (res.coupang_price) html += `<span class="price-tag">쿠팡 최저 ${res.coupang_price.toLocaleString()}원</span>`;
+  html += `</div>`;
+
+  for (const [src, items] of Object.entries(res.sources)) {
+    if (!items || items.length === 0) continue;
+    html += `<div class="src-group"><h4>${srcLabels[src] || src} (${items.length})</h4><ul>`;
+    items.slice(0, 5).forEach((it) => {
+      const t = it.title || it.name || "";
+      const meta = it.points ? ` · ${it.points}pts` : (it.price ? ` · ${it.price.toLocaleString()}원` : (it.ups ? ` · ▲${it.ups}` : ""));
+      const link = it.url ? `<a class="link" href="${it.url}" target="_blank">${escapeHtml(t.slice(0, 70))}</a>` : escapeHtml(t.slice(0, 70));
+      html += `<li>${link}<span class="src">${meta}</span></li>`;
+    });
+    html += `</ul></div>`;
+  }
+  html += `<div class="next-step">✅ 조사 완료 (topic_id: ${r.topic_id}). 축: <b>${axisLabel(res.axis)}</b> · 수익화: ${res.coupang_monetizable ? "가능" : "불가"}<br>
+    다음 단계(앵글 생성 → 대본 → 자막/효과음)는 2주차에 연결됩니다. 이 조사 데이터가 그대로 앵글 생성기에 입력됩니다.</div>`;
+  $("researchResult").innerHTML = html;
+}
+
 $("btnCollect").onclick = async () => {
   setStatus("수집 실행 중… (1~2분 소요)");
   $("btnCollect").disabled = true;
