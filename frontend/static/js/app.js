@@ -102,8 +102,11 @@ function renderResearch(r) {
     });
     html += `</ul></div>`;
   }
-  html += `<div class="next-step">✅ 조사 완료 (topic_id: ${r.topic_id}). 축: <b>${axisLabel(res.axis)}</b> · 수익화: ${res.coupang_monetizable ? "가능" : "불가"}<br>
-    다음 단계(앵글 생성 → 대본 → 자막/효과음)는 2주차에 연결됩니다. 이 조사 데이터가 그대로 앵글 생성기에 입력됩니다.</div>`;
+  html += `<div class="next-step">✅ 조사 완료 (topic_id: ${r.topic_id}). 축: <b>${axisLabel(res.axis)}</b> · 수익화: ${res.coupang_monetizable ? "가능" : "불가"}`;
+  if (res.coupang_product) {
+    html += `<br>🔗 대표 수익화 제품: <b>${escapeHtml(res.coupang_product)}</b>${res.coupang_price ? ` (${res.coupang_price.toLocaleString()}원)` : ""}`;
+  }
+  html += `<br>다음 단계(앵글 생성 → 대본 → 자막/효과음)는 2주차에 연결됩니다. 이 조사 데이터가 그대로 앵글 생성기에 입력됩니다.</div>`;
   $("researchResult").innerHTML = html;
 }
 

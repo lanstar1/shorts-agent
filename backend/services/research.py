@@ -14,6 +14,7 @@ On-demand 키워드 조사 모듈 (수동 모드 핵심)
 """
 import sys
 import os
+import re
 import hmac
 import hashlib
 import urllib.parse
@@ -27,6 +28,50 @@ from services.collectors.base import today_kst, match_keyword, to_english
 COUPANG_DOMAIN = "https://api-gateway.coupang.com"
 
 
+# 흔한 IT/전자제품 접미 명사 (붙여쓴 키워드 분리용)
+PRODUCT_SUFFIXES = [
+    "정품케이스", "맥세이프", "케이스", "보호필름", "강화유리", "액정보호",
+    "충전기", "케이블", "거치대", "커버", "어댑터", "마우스패드", "마우스",
+    "키보드", "이어폰", "헤드폰", "공유기", "모니터", "스탠드", "그립톡",
+]
+
+
+def _tokenize(keyword):
+    """
+    키워드를 한글/영문/숫자 덩어리로 분리 + 붙여쓴 제품 접미명사 분리.
+    '아이폰17 정품케이스' → [아이폰, 17, 정품, 케이스]
+    """
+    raw = re.findall(r"[가-힣]+|[a-zA-Z]+|[0-9]+", keyword)
+    tokens = []
+    for t in raw:
+        matched = False
+        for suf in PRODUCT_SUFFIXES:
+            if t != suf and t.endswith(suf) and len(t) > len(suf):
+                tokens.append(t[:-len(suf)].lower())
+                tokens.append(suf.lower())
+                matched = True
+                break
+        if not matched:
+            tokens.append(t.lower())
+    return [t for t in tokens if t]
+
+
+def _relevance(product_name, tokens):
+    """제품명이 검색 토큰을 얼마나 포함하는지 점수화"""
+    if not product_name:
+        return 0
+    name = product_name.replace(" ", "").lower()
+    hit = sum(1 for t in tokens if t in name)
+    score = hit
+    # 모든 토큰 포함 시 보너스
+    if tokens and hit == len(tokens):
+        score += 2
+    # 공식 정품 가산 (Apple/삼성 정품)
+    if "정품" in name and ("apple" in name or "삼성" in name or "samsung" in name):
+        score += 2
+    return score
+
+
 # ---------- 쿠팡 검색 ----------
 def _coupang_auth(method, path):
     dt = datetime.now(timezone.utc).strftime("%y%m%dT%H%M%SZ")
@@ -37,27 +82,48 @@ def _coupang_auth(method, path):
             f"signed-date={dt}, signature={sig}")
 
 
-def _coupang_search(keyword, limit=5):
+def _coupang_search(keyword, fetch=15, top=5):
+    """
+    쿠팡 검색 후 관련도 재정렬 + 중복제거.
+    fetch개 가져와서 키워드 관련도순으로 정렬, 상위 top개 반환.
+    """
     if not config.COUPANG_ACCESS_KEY:
         return []
     q = urllib.parse.quote(keyword)
     path = (f"/v2/providers/affiliate_open_api/apis/openapi/v1/products/search"
-            f"?keyword={q}&limit={limit}")
+            f"?keyword={q}&limit={fetch}")
     try:
         r = requests.get(COUPANG_DOMAIN + path,
                          headers={"Authorization": _coupang_auth("GET", path)},
                          timeout=config.HTTP_TIMEOUT)
         r.raise_for_status()
         items = r.json().get("data", {}).get("productData", [])
-        return [{
-            "name": it.get("productName"),
-            "price": it.get("productPrice"),
-            "url": it.get("productUrl"),  # 제휴 링크 (수익화)
-            "is_rocket": it.get("isRocket"),
-        } for it in items]
     except Exception as e:
         print(f"[research] coupang 검색 실패: {e}")
         return []
+
+    tokens = _tokenize(keyword)
+    # 중복 제거 (productId 기준, 없으면 이름)
+    seen = set()
+    deduped = []
+    for it in items:
+        key = it.get("productId") or it.get("productName")
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(it)
+
+    # 관련도 점수 부여 후 정렬 (점수 동률이면 원래 순서 유지)
+    scored = [(it, _relevance(it.get("productName", ""), tokens)) for it in deduped]
+    scored.sort(key=lambda x: -x[1])
+
+    return [{
+        "name": it.get("productName"),
+        "price": it.get("productPrice"),
+        "url": it.get("productUrl"),       # 제휴 링크 (수익화)
+        "is_rocket": it.get("isRocket"),
+        "relevance": sc,                   # 관련도 점수 (디버깅/표시용)
+    } for it, sc in scored[:top]]
 
 
 # ---------- 네이버 뉴스/블로그 ----------
@@ -152,13 +218,9 @@ def research(keyword: str):
     summary = {k: len(v) for k, v in sources.items()}
     total = sum(summary.values())
 
-    # 쿠팡 최저가/수익화 링크 추출
+    # 대표 수익화 링크 = 관련도 1위 제품 (쿠팡 결과는 이미 관련도순 정렬됨)
     coupang_items = sources["coupang"]
-    cheapest = None
-    if coupang_items:
-        valid = [c for c in coupang_items if c.get("price")]
-        if valid:
-            cheapest = min(valid, key=lambda x: x["price"])
+    top_item = coupang_items[0] if coupang_items else None
 
     return {
         "keyword": keyword,
@@ -167,8 +229,9 @@ def research(keyword: str):
         "sources": sources,
         "summary": summary,
         "total_sources": total,
-        "coupang_link": cheapest.get("url") if cheapest else None,
-        "coupang_price": cheapest.get("price") if cheapest else None,
+        "coupang_link": top_item.get("url") if top_item else None,
+        "coupang_price": top_item.get("price") if top_item else None,
+        "coupang_product": top_item.get("name") if top_item else None,
         "researched_at": today_kst(),
     }
 
