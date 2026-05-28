@@ -68,3 +68,18 @@ a.link:hover { text-decoration: underline; }
 .angle-points { margin: 8px 0 8px 18px; }
 .angle-points li { font-size: 13px; color: #555; padding: 2px 0; }
 .angle-close { font-size: 14px; font-weight: 600; color: #1565c0; margin-top: 8px; }
+.script-box { margin-top: 14px; border-top: 2px dashed #eee; padding-top: 14px; }
+.script-head { font-size: 14px; font-weight: 700; color: #111; margin-bottom: 12px; }
+.scene { background: #fafafa; border-radius: 8px; padding: 12px; margin-bottom: 10px; }
+.sc-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+.sc-time { font-size: 12px; font-weight: 700; color: #333; background: #eee; padding: 2px 8px; border-radius: 5px; }
+.sc-broll { font-size: 11px; color: #fff; font-weight: 600; padding: 2px 8px; border-radius: 5px; }
+.sc-sfx { font-size: 11px; color: #888; }
+.sc-headline { font-size: 13px; color: #b8860b; font-weight: 700; margin-bottom: 4px; }
+.sc-narr { font-size: 14px; color: #111; margin-bottom: 4px; }
+.sc-cap { font-size: 13px; color: #555; margin-bottom: 4px; }
+.sc-visual { font-size: 12px; color: #777; }
+.emph { background: #fff3cd; color: #856404; font-size: 11px; font-weight: 700;
+  padding: 1px 6px; border-radius: 4px; }
+.script-notes { font-size: 12px; color: #666; background: #f0f4ff; border-radius: 8px;
+  padding: 10px; margin-top: 8px; }

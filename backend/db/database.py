@@ -122,8 +122,25 @@ def init_db():
         cur.execute("CREATE INDEX IF NOT EXISTS idx_ranked_date ON ranked_topics(ranked_date)")
         cur.execute("CREATE INDEX IF NOT EXISTS idx_angle_date ON story_angles(generated_date)")
 
+        # 마이그레이션: story_angles.script_data (3단계 스크립트 저장)
+        _add_column_if_missing(cur, "story_angles", "script_data", json_type)
+
         conn.commit()
         cur.close()
+
+
+def _add_column_if_missing(cur, table, column, col_type):
+    """컬럼이 없으면 추가 (PostgreSQL/SQLite 호환)"""
+    if IS_PG:
+        cur.execute(
+            f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {column} {col_type}"
+        )
+    else:
+        # SQLite는 IF NOT EXISTS 미지원 → 기존 컬럼 확인 후 추가
+        cur.execute(f"PRAGMA table_info({table})")
+        existing = [r[1] for r in cur.fetchall()]
+        if column not in existing:
+            cur.execute(f"ALTER TABLE {table} ADD COLUMN {column} {col_type}")
 
 
 def insert_candidate(row: dict):
@@ -264,6 +281,35 @@ def get_angles_by_topic(topic_id):
                 "curation_score": r[6],
             })
         return out
+
+
+def get_angle(angle_id):
+    ph = _ph()
+    with get_conn() as conn:
+        cur = conn.cursor()
+        cur.execute(f"SELECT * FROM story_angles WHERE id = {ph}", [angle_id])
+        row = cur.fetchone()
+        cols = [d[0] for d in cur.description] if cur.description else []
+        cur.close()
+        if not row:
+            return None
+        rec = dict(zip(cols, row))
+        # JSON 컬럼 파싱
+        for k in ("data_points", "script_data"):
+            if k in rec:
+                rec[k] = load_json(rec[k])
+        return rec
+
+
+def update_angle_script(angle_id, script_data):
+    ph = _ph()
+    with get_conn() as conn:
+        cur = conn.cursor()
+        cur.execute(
+            f"UPDATE story_angles SET script_data = {ph} WHERE id = {ph}",
+            [dump_json(script_data), angle_id],
+        )
+        cur.close()
 
 
 if __name__ == "__main__":

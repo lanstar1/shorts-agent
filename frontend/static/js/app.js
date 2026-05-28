@@ -151,10 +151,70 @@ function renderAngles(angles) {
       <div class="angle-hook">🎬 훅: ${escapeHtml(a.hook || "")}</div>
       <ul class="angle-points">${points}</ul>
       <div class="angle-close">❓ ${escapeHtml(a.closing_question || "")}</div>
+      <div class="row" style="margin-top:12px">
+        <button class="primary btn-script" data-angle="${a.id}">🎬 이 앵글로 대본 만들기</button>
+        <span class="status script-status"></span>
+      </div>
+      <div class="script-result"></div>
     </div>`;
   });
   html += `</div>`;
   document.getElementById("angleResult").innerHTML = html;
+
+  document.querySelectorAll(".btn-script").forEach((btn) => {
+    btn.onclick = async (e) => {
+      const aid = e.target.dataset.angle;
+      const card = e.target.closest(".angle-card");
+      const statusEl = card.querySelector(".script-status");
+      const resultEl = card.querySelector(".script-result");
+      e.target.disabled = true;
+      statusEl.textContent = "대본 생성 중… (Claude 연출, 15~30초)";
+      try {
+        const sr = await api("/api/scripts/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ angle_id: Number(aid) }),
+        });
+        if (sr.error) { statusEl.textContent = "실패: " + sr.error; e.target.disabled = false; return; }
+        statusEl.textContent = `완료: ${sr.script.scenes.length}개 장면`;
+        renderScript(resultEl, sr.script);
+      } catch (err) {
+        statusEl.textContent = "실패: " + err.message;
+        e.target.disabled = false;
+      }
+    };
+  });
+}
+
+const BROLL_COLORS = {
+  "제품렌더": "#534ab7", "실물": "#1d9e75", "스크린녹화": "#185fa5",
+  "밈": "#d4537e", "그래픽": "#ba7517", "인물": "#993c1d",
+};
+
+function renderScript(el, script) {
+  let html = `<div class="script-box">
+    <div class="script-head">📝 ${escapeHtml(script.title || "")} · ${script.total_duration_sec || 25}초 · ${script.scenes.length}장면</div>`;
+  script.scenes.forEach((s) => {
+    const bc = BROLL_COLORS[s.broll_type] || "#888";
+    const emph = (s.emphasis || []).map((k) => `<span class="emph">${escapeHtml(k)}</span>`).join(" ");
+    const headline = s.headline ? `<div class="sc-headline">🔝 헤드라인: ${escapeHtml(s.headline)}</div>` : "";
+    html += `<div class="scene">
+      <div class="sc-top">
+        <span class="sc-time">${escapeHtml(s.time || "")}</span>
+        <span class="sc-broll" style="background:${bc}">${escapeHtml(s.broll_type || "")}</span>
+        <span class="sc-sfx">🔊 ${escapeHtml(s.sfx || "")}</span>
+      </div>
+      ${headline}
+      <div class="sc-narr">🎙️ ${escapeHtml(s.narration || "")}</div>
+      <div class="sc-cap">💬 ${escapeHtml(s.caption || "")} ${emph}</div>
+      <div class="sc-visual">🎬 ${escapeHtml(s.visual || "")}</div>
+    </div>`;
+  });
+  if (script.production_notes) {
+    html += `<div class="script-notes">📌 제작노트: ${escapeHtml(script.production_notes)}</div>`;
+  }
+  html += `</div>`;
+  el.innerHTML = html;
 }
 
 $("btnCollect").onclick = async () => {
