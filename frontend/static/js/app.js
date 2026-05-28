@@ -106,8 +106,55 @@ function renderResearch(r) {
   if (res.coupang_product) {
     html += `<br>🔗 대표 수익화 제품: <b>${escapeHtml(res.coupang_product)}</b>${res.coupang_price ? ` (${res.coupang_price.toLocaleString()}원)` : ""}`;
   }
-  html += `<br>다음 단계(앵글 생성 → 대본 → 자막/효과음)는 2주차에 연결됩니다. 이 조사 데이터가 그대로 앵글 생성기에 입력됩니다.</div>`;
+  html += `<br>다음 단계: 아래 버튼으로 스토리텔링 앵글 3개를 생성합니다.</div>`;
+  html += `<div class="row" style="margin-top:12px">
+    <button id="btnAngles" class="primary" data-topic="${r.topic_id}">✨ 앵글 3개 생성</button>
+    <span id="angleStatus" class="status"></span>
+  </div>`;
+  html += `<div id="angleResult"></div>`;
   $("researchResult").innerHTML = html;
+
+  document.getElementById("btnAngles").onclick = async (e) => {
+    const tid = e.target.dataset.topic;
+    e.target.disabled = true;
+    $("angleStatus").textContent = "앵글 생성 중… (Claude 분석, 10~20초)";
+    try {
+      const ar = await api("/api/angles/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic_id: Number(tid) }),
+      });
+      if (ar.error) { $("angleStatus").textContent = "실패: " + ar.error; e.target.disabled = false; return; }
+      $("angleStatus").textContent = `완료: ${ar.angles.length}개 생성`;
+      renderAngles(ar.angles);
+    } catch (err) {
+      $("angleStatus").textContent = "실패: " + err.message;
+      e.target.disabled = false;
+    }
+  };
+}
+
+const ANGLE_LABELS = {
+  expectation_gap: { name: "기대갭", color: "#d4537e" },
+  hidden_truth: { name: "숨겨진 진실", color: "#534ab7" },
+  market_shock: { name: "시장 충격", color: "#ba7517" },
+};
+
+function renderAngles(angles) {
+  let html = `<div class="angles">`;
+  angles.forEach((a) => {
+    const lbl = ANGLE_LABELS[a.angle_type] || { name: a.angle_type, color: "#888" };
+    const points = (a.data_points || []).map((p) => `<li>${escapeHtml(p)}</li>`).join("");
+    html += `<div class="angle-card">
+      <div class="angle-type" style="background:${lbl.color}">${lbl.name}</div>
+      <div class="angle-title">${escapeHtml(a.title || "")}</div>
+      <div class="angle-hook">🎬 훅: ${escapeHtml(a.hook || "")}</div>
+      <ul class="angle-points">${points}</ul>
+      <div class="angle-close">❓ ${escapeHtml(a.closing_question || "")}</div>
+    </div>`;
+  });
+  html += `</div>`;
+  document.getElementById("angleResult").innerHTML = html;
 }
 
 $("btnCollect").onclick = async () => {

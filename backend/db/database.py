@@ -213,6 +213,57 @@ def get_ranked_topic(topic_id):
         return dict(zip(cols, row)) if cols else dict(row)
 
 
+def insert_story_angle(row: dict):
+    """story_angles에 1건 삽입하고 id 반환"""
+    ph = _ph()
+    cols = ["ranked_topic_id", "generated_date", "angle_type", "title", "hook",
+            "data_points", "closing_question", "curation_score", "selected_for_today"]
+    vals = [
+        row.get("ranked_topic_id"),
+        row.get("generated_date"),
+        row.get("angle_type"),
+        row.get("title"),
+        row.get("hook"),
+        dump_json(row.get("data_points")) if row.get("data_points") is not None else None,
+        row.get("closing_question"),
+        row.get("curation_score", 0),
+        1 if row.get("selected_for_today") else 0,
+    ]
+    placeholders = ", ".join([ph] * len(cols))
+    returning = " RETURNING id" if IS_PG else ""
+    with get_conn() as conn:
+        cur = conn.cursor()
+        cur.execute(
+            f"INSERT INTO story_angles ({', '.join(cols)}) VALUES ({placeholders}){returning}",
+            vals,
+        )
+        new_id = cur.fetchone()[0] if IS_PG else cur.lastrowid
+        cur.close()
+        return new_id
+
+
+def get_angles_by_topic(topic_id):
+    ph = _ph()
+    with get_conn() as conn:
+        cur = conn.cursor()
+        cur.execute(
+            f"""SELECT id, angle_type, title, hook, data_points, closing_question, curation_score
+                FROM story_angles WHERE ranked_topic_id = {ph}
+                ORDER BY id""",
+            [topic_id],
+        )
+        rows = cur.fetchall()
+        cur.close()
+        out = []
+        for r in rows:
+            out.append({
+                "id": r[0], "angle_type": r[1], "title": r[2], "hook": r[3],
+                "data_points": load_json(r[4]), "closing_question": r[5],
+                "curation_score": r[6],
+            })
+        return out
+
+
 if __name__ == "__main__":
     init_db()
     print(f"DB 초기화 완료 (mode={'PostgreSQL' if IS_PG else 'SQLite'})")

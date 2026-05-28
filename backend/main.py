@@ -11,7 +11,7 @@ from contextlib import asynccontextmanager
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from db import database
-from api.routes import topics
+from api.routes import topics, angles
 from services import scheduler_service
 
 FRONTEND_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend")
@@ -24,13 +24,14 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="shorts-agent", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="shorts-agent", version="0.2.0", lifespan=lifespan)
 app.include_router(topics.router)
+app.include_router(angles.router)
 
 
 @app.get("/api/health")
 def health():
-    return {"status": "ok", "service": "shorts-agent", "version": "0.1.0",
+    return {"status": "ok", "service": "shorts-agent", "version": "0.2.0",
             "db": "postgresql" if database.IS_PG else "sqlite"}
 
 

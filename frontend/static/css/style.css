@@ -59,3 +59,12 @@ a.link:hover { text-decoration: underline; }
 .src-group li { font-size: 12px; padding: 3px 0; color: #444; border-bottom: 1px solid #f5f5f5; }
 .next-step { margin-top: 14px; padding: 12px; background: #f8f8f8; border-radius: 8px;
   font-size: 13px; color: #666; }
+.angles { display: flex; flex-direction: column; gap: 12px; margin-top: 14px; }
+.angle-card { border: 1px solid #e5e5e5; border-radius: 10px; padding: 16px; background: #fff; }
+.angle-type { display: inline-block; color: #fff; font-size: 11px; font-weight: 700;
+  padding: 3px 10px; border-radius: 6px; margin-bottom: 8px; }
+.angle-title { font-size: 17px; font-weight: 700; color: #111; margin-bottom: 8px; }
+.angle-hook { font-size: 13px; color: #444; margin-bottom: 8px; }
+.angle-points { margin: 8px 0 8px 18px; }
+.angle-points li { font-size: 13px; color: #555; padding: 2px 0; }
+.angle-close { font-size: 14px; font-weight: 600; color: #1565c0; margin-top: 8px; }
