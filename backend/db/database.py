@@ -124,6 +124,8 @@ def init_db():
 
         # 마이그레이션: story_angles.script_data (3단계 스크립트 저장)
         _add_column_if_missing(cur, "story_angles", "script_data", json_type)
+        # 마이그레이션: story_angles.aligned_segments (4단계 STT 정렬 결과)
+        _add_column_if_missing(cur, "story_angles", "aligned_segments", json_type)
 
         conn.commit()
         cur.close()
@@ -295,10 +297,21 @@ def get_angle(angle_id):
             return None
         rec = dict(zip(cols, row))
         # JSON 컬럼 파싱
-        for k in ("data_points", "script_data"):
+        for k in ("data_points", "script_data", "aligned_segments"):
             if k in rec:
                 rec[k] = load_json(rec[k])
         return rec
+
+
+def update_angle_aligned(angle_id, segments):
+    ph = _ph()
+    with get_conn() as conn:
+        cur = conn.cursor()
+        cur.execute(
+            f"UPDATE story_angles SET aligned_segments = {ph} WHERE id = {ph}",
+            [dump_json(segments), angle_id],
+        )
+        cur.close()
 
 
 def update_angle_script(angle_id, script_data):

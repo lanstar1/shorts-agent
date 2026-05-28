@@ -213,13 +213,42 @@ function renderScript(el, script, angleId) {
   if (script.production_notes) {
     html += `<div class="script-notes">📌 제작노트: ${escapeHtml(script.production_notes)}</div>`;
   }
+  html += `<div class="align-row">
+    <span class="align-label">🎤 정확한 타이밍:</span>
+    <input type="file" class="audio-input" accept="audio/*" data-angle="${angleId}">
+    <button class="align-btn" data-angle="${angleId}">음성으로 자막 정렬</button>
+    <span class="align-status"></span>
+  </div>`;
   html += `<div class="dl-row">
     <a class="dl-btn" href="/api/exports/subtitles/${angleId}.srt" download>📄 SRT 다운로드</a>
     <a class="dl-btn" href="/api/exports/subtitles/${angleId}.fcpxml" download>🎬 FCPXML 다운로드</a>
-    <span class="dl-note">FCPXML은 Final Cut Pro에 임포트 · 음성 STT 연동 시 타이밍 자동정렬</span>
+    <span class="dl-note">음성 정렬 안 하면 예상 타임코드로 생성 (FCP에서 미세조정)</span>
   </div>`;
   html += `</div>`;
   el.innerHTML = html;
+
+  // 음성 업로드 정렬
+  const alignBtn = el.querySelector(".align-btn");
+  if (alignBtn) {
+    alignBtn.onclick = async () => {
+      const fileInput = el.querySelector(".audio-input");
+      const statusEl = el.querySelector(".align-status");
+      if (!fileInput.files.length) { statusEl.textContent = "음성 파일을 선택하세요"; return; }
+      alignBtn.disabled = true;
+      statusEl.textContent = "음성 분석 중… (Whisper STT, 길이에 따라 10~40초)";
+      const fd = new FormData();
+      fd.append("audio", fileInput.files[0]);
+      try {
+        const r = await fetch(`/api/exports/align/${angleId}`, { method: "POST", body: fd });
+        const d = await r.json();
+        if (d.error) { statusEl.textContent = "실패: " + d.error; alignBtn.disabled = false; return; }
+        statusEl.textContent = `✅ 정렬 완료 (${d.duration?.toFixed(1)}초, ${d.scene_count}장면). 이제 다운로드하면 정확한 타이밍이 적용됩니다.`;
+      } catch (err) {
+        statusEl.textContent = "실패: " + err.message;
+        alignBtn.disabled = false;
+      }
+    };
+  }
 }
 
 $("btnCollect").onclick = async () => {

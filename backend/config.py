@@ -24,6 +24,9 @@ COUPANG_SECRET_KEY = _get("COUPANG_SECRET_KEY", "")
 # ===== YouTube Data API v3 (선택, 경쟁사 트렌드 추적) =====
 YOUTUBE_API_KEY = _get("YOUTUBE_API_KEY", "")
 
+# ===== OpenAI Whisper (음성 STT 자막 정렬) =====
+OPENAI_API_KEY = _get("OPENAI_API_KEY", "")
+
 # ===== DB =====
 DATABASE_URL = _get("DATABASE_URL", "")  # Render: postgresql://...  / 로컬: 빈값이면 SQLite
 SQLITE_PATH = _get("SQLITE_PATH", "shorts_agent.db")
