@@ -55,6 +55,52 @@ def download_subtitles(angle_id: int, fmt: str):
     )
 
 
+@router.get("/sfx-status")
+def sfx_status():
+    """SFX 팩에 어떤 효과음이 있는지 확인"""
+    from services.sfx_builder import available_sfx, SFX_TYPES
+    return {"available": available_sfx(), "expected_types": SFX_TYPES}
+
+
+@router.get("/sfx/{angle_id}.mp3")
+def download_sfx(angle_id: int):
+    """앵글 스크립트의 효과음 큐 → 타임코드 배치된 단일 mp3"""
+    angle = database.get_angle(angle_id)
+    if not angle:
+        return Response("앵글을 찾을 수 없습니다.", status_code=404, media_type="text/plain")
+    script = angle.get("script_data")
+    if not script:
+        return Response("먼저 대본을 생성하세요.", status_code=400, media_type="text/plain")
+
+    segments = angle.get("aligned_segments") or script_to_segments(script)
+    scenes = {s.get("scene"): s for s in script.get("scenes", [])}
+    for seg in segments:
+        sc = scenes.get(seg.get("scene"))
+        if sc:
+            seg["sfx"] = sc.get("sfx")
+
+    total = script.get("total_duration_sec", 25)
+    if segments:
+        total = max(total, max((s["end"] for s in segments), default=total))
+
+    from services.sfx_builder import build_sfx_track
+    import tempfile
+    out = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3").name
+    result = build_sfx_track(segments, total_sec=total, output_path=out)
+    if "error" in result:
+        return Response(result["error"], status_code=400, media_type="text/plain; charset=utf-8")
+
+    with open(out, "rb") as f:
+        data = f.read()
+    os.unlink(out)
+    return Response(
+        data, media_type="audio/mpeg",
+        headers={"Content-Disposition": f'attachment; filename="shorts_{angle_id}_sfx.mp3"',
+                 "X-SFX-Placed": str(len(result["placed"])),
+                 "X-SFX-Missing": ",".join(result["missing"]) or "none"},
+    )
+
+
 @router.post("/align/{angle_id}")
 async def align_with_audio(angle_id: int, audio: UploadFile = File(...)):
     """

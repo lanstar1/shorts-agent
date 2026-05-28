@@ -24,7 +24,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="shorts-agent", version="0.4.0", lifespan=lifespan)
+app = FastAPI(title="shorts-agent", version="0.5.0", lifespan=lifespan)
 app.include_router(topics.router)
 app.include_router(angles.router)
 app.include_router(scripts.router)
@@ -33,7 +33,7 @@ app.include_router(exports.router)
 
 @app.get("/api/health")
 def health():
-    return {"status": "ok", "service": "shorts-agent", "version": "0.4.0",
+    return {"status": "ok", "service": "shorts-agent", "version": "0.5.0",
             "db": "postgresql" if database.IS_PG else "sqlite"}
 
 

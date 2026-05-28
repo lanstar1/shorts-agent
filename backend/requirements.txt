@@ -7,3 +7,5 @@ anthropic==0.104.1
 psycopg2-binary==2.9.10
 python-multipart==0.0.12
 openai==1.54.0
+pydub==0.25.1
+imageio-ffmpeg==0.5.1

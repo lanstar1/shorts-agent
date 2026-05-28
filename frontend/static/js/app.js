@@ -222,11 +222,13 @@ function renderScript(el, script, angleId) {
   html += `<div class="dl-row">
     <a class="dl-btn" href="/api/exports/subtitles/${angleId}.srt" download>📄 SRT 다운로드</a>
     <a class="dl-btn" href="/api/exports/subtitles/${angleId}.fcpxml" download>🎬 FCPXML 다운로드</a>
+    <a class="dl-btn" href="/api/exports/sfx/${angleId}.mp3" download>🔊 효과음 트랙 다운로드</a>
   </div>
   <div class="dl-help">
     <b>🎬 FCPXML</b>: 내 자막 템플릿(MP네모메모심플) 적용 — FCP에 템플릿이 설치돼 있어야 함.<br>
     &nbsp;&nbsp;FCP에서 <b>파일 → 가져오기 → Final Cut Pro XML</b> → 장면마다 자막 자동 배치<br>
     <b>📄 SRT</b>: 템플릿 없이도 100% 동작. <b>파일 → 가져오기 → 자막</b> (타이밍·텍스트만)<br>
+    <b>🔊 효과음</b>: 장면 타임코드에 효과음 배치된 단일 mp3 (내 SFX 팩 기반). FCP에 오디오 트랙으로 얹기<br>
     음성 정렬 안 하면 예상 타임코드로 생성됩니다.
   </div>`;
   html += `</div>`;
