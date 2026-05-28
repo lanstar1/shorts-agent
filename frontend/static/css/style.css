@@ -1,0 +1,45 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, "Apple SD Gothic Neo", "Pretendard", sans-serif;
+  background: #f4f5f7; color: #1a1a1a; line-height: 1.5;
+}
+header {
+  background: #111; color: #fff; padding: 16px 24px;
+  display: flex; align-items: baseline; gap: 12px;
+}
+header h1 { font-size: 20px; font-weight: 700; }
+header .sub { font-size: 13px; color: #999; }
+main { max-width: 1100px; margin: 24px auto; padding: 0 16px;
+  display: flex; flex-direction: column; gap: 16px; }
+.card { background: #fff; border-radius: 12px; padding: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.card h2 { font-size: 16px; margin-bottom: 14px; font-weight: 600; }
+.row { display: flex; align-items: center; gap: 12px; }
+button {
+  border: 1px solid #ddd; background: #fff; padding: 9px 16px;
+  border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500;
+}
+button:hover { background: #f0f0f0; }
+button.primary { background: #ffd400; border-color: #ffd400; color: #111; font-weight: 700; }
+button.primary:hover { background: #f5c800; }
+.status { font-size: 13px; color: #666; }
+.summary { display: flex; flex-wrap: wrap; gap: 10px; }
+.day-box { border: 1px solid #eee; border-radius: 8px; padding: 12px; min-width: 150px; }
+.day-box .date { font-weight: 700; font-size: 13px; margin-bottom: 6px; }
+.day-box .total { font-size: 22px; font-weight: 700; color: #111; }
+.day-box .breakdown { font-size: 11px; color: #888; margin-top: 4px; }
+.filters { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.chip { padding: 6px 14px; border-radius: 20px; font-size: 13px; }
+.chip.active { background: #111; color: #fff; border-color: #111; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #f0f0f0; }
+th { color: #888; font-weight: 600; font-size: 12px; }
+td.title { max-width: 380px; }
+.badge { padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+.badge.apple { background: #e8e8ed; color: #333; }
+.badge.samsung { background: #e3f0ff; color: #1565c0; }
+.badge.lanstar_core { background: #fff3cd; color: #856404; }
+.badge.appliance { background: #e8f5e9; color: #2e7d32; }
+.src { font-size: 11px; color: #999; }
+a.link { color: #1565c0; text-decoration: none; }
+a.link:hover { text-decoration: underline; }

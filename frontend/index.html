@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>shorts-agent · 주제 발굴</title>
+<link rel="stylesheet" href="/static/css/style.css?v=20260528a">
+</head>
+<body>
+<header>
+  <h1>🎬 shorts-agent</h1>
+  <span class="sub">맥가이버 스타일 쇼츠 주제 발굴 · 1단계 MVP</span>
+</header>
+
+<main>
+  <section class="card">
+    <div class="row">
+      <button id="btnCollect" class="primary">지금 수집 실행</button>
+      <button id="btnRefresh">새로고침</button>
+      <span id="status" class="status"></span>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>최근 5일 수집 현황</h2>
+    <div id="summary" class="summary">불러오는 중…</div>
+  </section>
+
+  <section class="card">
+    <h2>오늘의 후보 <span id="dateLabel"></span></h2>
+    <div class="filters">
+      <button class="chip active" data-axis="all">전체</button>
+      <button class="chip" data-axis="apple">애플</button>
+      <button class="chip" data-axis="samsung">삼성</button>
+      <button class="chip" data-axis="lanstar_core">본업</button>
+      <button class="chip" data-axis="appliance">가전</button>
+    </div>
+    <table id="candTable">
+      <thead>
+        <tr><th>축</th><th>소스</th><th>키워드</th><th>제목</th><th>신호</th><th>링크</th></tr>
+      </thead>
+      <tbody id="candBody"><tr><td colspan="6">불러오는 중…</td></tr></tbody>
+    </table>
+  </section>
+</main>
+
+<script src="/static/js/app.js?v=20260528a"></script>
+</body>
+</html>

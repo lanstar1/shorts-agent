@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: shorts-agent
+    runtime: python
+    plan: free
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: cd backend && python -m uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: NAVER_SEARCH_ID
+        sync: false
+      - key: NAVER_SEARCH_SECRET
+        sync: false
+      - key: COUPANG_ACCESS_KEY
+        sync: false
+      - key: COUPANG_SECRET_KEY
+        sync: false
+      - key: YOUTUBE_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: shorts-agent-db
+          property: connectionString
+      - key: COLLECT_HOUR_KST
+        value: "8"
+      - key: DAILY_ANGLE_COUNT
+        value: "3"
+
+databases:
+  - name: shorts-agent-db
+    plan: free
