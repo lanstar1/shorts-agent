@@ -22,15 +22,24 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SFX_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "sfx_pack")
 
 # 스크립트가 쓰는 효과음 큐 종류 (script_generator의 sfx 값과 일치)
-SFX_TYPES = ["whoosh", "impact", "pop", "ding", "riser", "transition", "hit", "swoosh"]
+SFX_TYPES = [
+    # 기본 5종
+    "whoosh", "impact", "pop", "ding", "riser",
+    # 확장 (랜스타 SFX팩 기반)
+    "realize", "coin", "snap", "tap",
+]
 
 # 큐 별칭 (스크립트가 다른 단어를 쓰면 표준 큐로 매핑)
 SFX_ALIASES = {
-    "swoosh": "whoosh", "transition": "whoosh", "swipe": "whoosh",
-    "hit": "impact", "boom": "impact", "bass": "impact",
-    "ding": "ding", "bell": "ding", "ping": "ding",
-    "pop": "pop", "click": "pop", "tap": "pop",
+    "swoosh": "whoosh", "transition": "whoosh", "swipe": "whoosh", "swosh": "whoosh",
+    "hit": "impact", "boom": "impact", "bass": "impact", "drum": "impact",
+    "ding": "ding", "bell": "ding", "ping": "ding", "ttiring": "ding",
+    "pop": "pop", "click": "pop", "blop": "pop",
     "riser": "riser", "rise": "riser", "build": "riser",
+    "realize": "realize", "aha": "realize", "insight": "realize",
+    "coin": "coin", "money": "coin",
+    "snap": "snap", "finger": "snap",
+    "tap": "tap", "beep": "tap",
 }
 
 
